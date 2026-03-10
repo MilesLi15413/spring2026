@@ -1,14 +1,11 @@
 server {
   listen 80;
   listen [::]:80;
-
   server_name ${MAIN_HOSTNAME};
   server_tokens off;
-
   location /.well-known/acme-challenge/ {
     root /var/www/certbot;
   }
-
   location / {
       return 301 https://${MAIN_HOSTNAME}$request_uri;
   }
@@ -17,15 +14,24 @@ server {
 server {
   listen 443 default_server ssl http2;
   listen [::]:443 ssl http2;
-
   server_name ${MAIN_HOSTNAME};
-
   ssl_certificate /etc/letsencrypt/live/${MAIN_HOSTNAME}/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/${MAIN_HOSTNAME}/privkey.pem;
 
-  
+  # --- Drop blocked IPs immediately (no response) ---
+  if ($bad_ip) { return 444; }
+
+  # --- Rate limiting ---
+  limit_req  zone=general burst=50 nodelay;
+  limit_conn addr 20;
+
+  # --- Global proxy timeout defaults ---
+  proxy_connect_timeout 10s;
+  proxy_send_timeout    60s;
+  proxy_read_timeout    60s;
+
   location / {
-    proxy_pass http://next-app:3000;
+    proxy_pass http://next_app;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -35,54 +41,70 @@ server {
   }
 
   location /account-service/docs {
-    proxy_pass http://account-service:3000/account-service/docs;
-    proxy_set_header Host $host;  # Ensure proper forwarding
+    proxy_pass http://account_svc/account-service/docs;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /account-service/ {
     resolver 127.0.0.11 valid=30s;
-    proxy_pass http://account-service:3000/account-service/;
-    proxy_set_header Host $host;  # Ensures that the full URL is forwarded
+    proxy_pass http://account_svc/account-service/;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /apply-service/docs {
-    proxy_pass http://apply-service:3000/apply-service/docs;
-    proxy_set_header Host $host;  # Ensure proper forwarding
+    proxy_pass http://apply_svc/apply-service/docs;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /apply-service/ {
     resolver 127.0.0.11 valid=30s;
-    proxy_pass http://apply-service:3000/apply-service/;
-    proxy_set_header Host $host;  # Ensures that the full URL is forwarded
+    proxy_pass http://apply_svc/apply-service/;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /qr-service/docs {
-    proxy_pass http://qr-service:3000/qr-service/docs;
-    proxy_set_header Host $host;  # Ensure proper forwarding
+    proxy_pass http://qr_svc/qr-service/docs;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /qr-service/ {
     resolver 127.0.0.11 valid=30s;
-    proxy_pass http://qr-service:3000/qr-service/;
-    proxy_set_header Host $host;  # Ensures that the full URL is forwarded
+    proxy_pass http://qr_svc/qr-service/;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /outreach-service/docs {
-    proxy_pass http://outreach-service:3000/outreach-service/docs;
-    proxy_set_header Host $host;  # Ensure proper forwarding
+    proxy_pass http://outreach_svc/outreach-service/docs;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
   location /outreach-service/ {
     resolver 127.0.0.11 valid=30s;
-    proxy_pass http://outreach-service:3000/outreach-service/;
-    proxy_set_header Host $host;  # Ensures that the full URL is forwarded
+    proxy_pass http://outreach_svc/outreach-service/;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
     client_max_body_size 20M;
   }
 
@@ -90,7 +112,9 @@ server {
       rewrite ^ $request_uri;
       rewrite ^/rabbitmq/api/(.*) /api/$1 break;
       return 400;
-      proxy_pass http://rabbitmq:15672$uri;
+      proxy_pass http://rabbitmq_mgmt$uri;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
       proxy_buffering                    off;
       proxy_set_header Host              $http_host;
       proxy_set_header X-Real-IP         $remote_addr;
@@ -99,7 +123,9 @@ server {
   }
 
   location /rabbitmq/ {
-      proxy_pass http://rabbitmq:15672/;
+      proxy_pass http://rabbitmq_mgmt/;
+      proxy_http_version 1.1;
+      proxy_set_header Connection "";
       proxy_buffering                    off;
       proxy_set_header Host              $http_host;
       proxy_set_header X-Real-IP         $remote_addr;
