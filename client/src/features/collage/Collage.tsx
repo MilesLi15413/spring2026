@@ -45,18 +45,14 @@ export default function Collage() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/Purple Cloud Cluster 2.webp" alt="" aria-hidden
         className="pn-corner-cloud" style={{ position: 'absolute', right: -60, top: '8%', width: 320, opacity: 0.85, pointerEvents: 'none', zIndex: 0, transform: 'scaleX(-1)' }} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/Violet Cloud Cluster 2.webp" alt="" aria-hidden
-        className="pn-corner-cloud" style={{ position: 'absolute', right: -40, bottom: '8%', width: 280, opacity: 0.75, pointerEvents: 'none', zIndex: 0, transform: 'scaleX(-1)' }} />
-
       {/* Top cloud */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/Pink Cloud Cluster 1.webp" alt="" aria-hidden style={{
-        position: 'absolute', top: -60, left: '50%',
-        transform: 'translateX(-50%)',
-        width: '110%', maxWidth: 1300,
-        opacity: 0.6, pointerEvents: 'none', zIndex: 0,
-      }} />
+          position: 'absolute', bottom: 670, left: '60%',
+          transform: 'translateX(-50%)',
+          width: '110%', maxWidth: 1100,
+          opacity: 0.5, pointerEvents: 'none', zIndex: 0,
+        }} />
 
       {/* Polaroid grid */}
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
