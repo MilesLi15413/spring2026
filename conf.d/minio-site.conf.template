@@ -27,6 +27,7 @@ server {
   set $upstream "minio";
 
   location /minio/ui/ {
+    limit_req zone=post_limit burst=5 nodelay;
     resolver 127.0.0.11 valid=30s;
     resolver_timeout 5s;
     rewrite ^/minio/ui/(.*) /$1 break;
@@ -43,6 +44,8 @@ server {
   }
 
   location / {
+    limit_req zone=post_limit burst=5 nodelay;
+
     resolver 127.0.0.11 valid=30s;
     resolver_timeout 5s;
     proxy_pass http://$upstream:9000;
